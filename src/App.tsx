@@ -52,7 +52,7 @@ function Controls() {
 //fim  zustand------------------
 
 
-//npx json-server  -w data/db.json -p 5173
+//npx json-server  -w data/db.json -p 5110
 var todosServerAxios = axios.create({ baseURL: "http://localhost:5110" });
 
 
@@ -72,14 +72,9 @@ function usePost(postId: number) {
 
 
 }
-
+/*
 function useCreatePost() {
-
-
-
-
   const queryClient = useQueryClient();
-
 
   return useMutation(
     (values) => axios.post('/posts/', values).then((res) => res.data),
@@ -103,7 +98,65 @@ function useCreatePost() {
     }
   )
 }
+*/
+function useDeletePost() {
 
+  
+    return useMutation(
+      (newPost) => todosServerAxios
+        .patch(`/posts/${newPost.id}`, newPost)
+        .then((res) => res.data),
+      {
+        onMutate: (newPost) => {
+          // update the data
+          queryClient.setQueryData(['posts', newPost.id], newPost)
+        },
+        onSuccess: (newPost) => {
+          queryClient.setQueryData(['posts', newPost.id], newPost)
+          console.log("pppppp");
+          queryClient.invalidateQueries('posts')
+          /*
+          if (queryClient.getQueryData('posts')) {
+            console.log("33333");
+            
+            queryClient.setQueryData('posts', old => {
+              return old.map(d => {
+                if (d.id === newPost.id) {
+                  return newPost
+                }
+                return d
+              })
+            })
+          } else {
+            console.log("KKKKKKKK");
+            
+            queryClient.setQueryData('posts', [newPost])
+            queryClient.invalidateQueries('posts')
+          }*/
+        },
+      }
+  )
+  /*
+  const [state, setState] = React.useReducer((_, action) => action, {
+    isIdle: true,
+  })
+console.log("::::::::::::::::");
+
+  const mutate = React.useCallback(async (postId) => {
+    console.log("ÇÇÇÇÇÇÇÇÇÇÇ");
+    
+    setState({ isLoading: true })
+    try {
+      await todosServerAxios.delete(`/posts/${postId}`).then((res) => res.data)
+      setState({ isSuccess: true })
+    } catch (error) {
+      setState({ isError: true, error })
+    }
+  }, [])
+
+  return [mutate, state]
+*/
+}
 
 function Example() {
   let state = useOverlayTriggerState({});
@@ -189,8 +242,6 @@ function App() {
         }}>
           <Todos />
         </div>
-
-
         <BearCounter></BearCounter>
         <Controls></Controls>
         <div>xxxx</div>
@@ -201,22 +252,24 @@ function App() {
 }
 
 
-
-
-
-
-
-
-
-
-
-
 //const Component1 = ({ prop1, prop2 }): JSX.Element => { }
 const Todos: React.FC<{}> = () => {
   const { isLoading, isError, data, error } = usePosts();
-  //const { data: dd } = usePost(5);
-  //console.log(dd);
+  //const [createPost, createPostInfo] = useCreatePost();
+  const deletePost  = useDeletePost();
+ 
+ const postId ="a8nX64wMH";
+  const onDelete = async () => {
+    console.log     ('------------------------------/admin');
+   
+   // await savePost(postId)
+    
+  }
 
+  /*
+  const { data: dd } = usePost(5);
+  console.log(dd);
+  */
   if (isLoading) {
     return <span>
       <img src={reactLogo} className="logo react" alt="React logo" />
@@ -244,15 +297,13 @@ const Todos: React.FC<{}> = () => {
     return <span>Error: {error.message}</span>
   }
 
-
-
   // We can assume by this point that `isSuccess === true`
   return (
     data.map((post) => (
       <div style={stylePost} to={`./${post.id}`} key={post.id} >
-        <h3>{post.title}</h3>
+        <h3>-{post.title}</h3>
         <p>{post.body}</p>
-        <button onClick={() => { console.log("XXX"); }}>ooo</button>
+        <button onClick={ ()=> deletePost.mutate({ id: post.id, title: 'ffff' })  }>ooo</button>
       </div>
     )))
 
