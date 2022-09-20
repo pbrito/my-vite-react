@@ -42,7 +42,7 @@ const useBearStore = create((set) => ({
 
 function BearCounter() {
   const bears = useBearStore((state) => state.bears)
-  return <h1>{bears} around here ...</h1>
+  return <h1>{bears} bears around here ...</h1>
 }
 
 function Controls() {
@@ -101,40 +101,40 @@ function useCreatePost() {
 */
 function useDeletePost() {
 
-  
-    return useMutation(
-      (newPost) => todosServerAxios
-        .patch(`/posts/${newPost.id}`, newPost)
-        .then((res) => res.data),
-      {
-        onMutate: (newPost) => {
-          // update the data
-          queryClient.setQueryData(['posts', newPost.id], newPost)
-        },
-        onSuccess: (newPost) => {
-          queryClient.setQueryData(['posts', newPost.id], newPost)
-          console.log("pppppp");
-          queryClient.invalidateQueries('posts')
-          /*
-          if (queryClient.getQueryData('posts')) {
-            console.log("33333");
-            
-            queryClient.setQueryData('posts', old => {
-              return old.map(d => {
-                if (d.id === newPost.id) {
-                  return newPost
-                }
-                return d
-              })
+
+  return useMutation(
+    (newPost) => todosServerAxios
+      .patch(`/posts/${newPost.id}`, newPost)
+      .then((res) => res.data),
+    {
+      onMutate: (newPost) => {
+        // update the data
+        queryClient.setQueryData(['posts', newPost.id], newPost)
+      },
+      onSuccess: (newPost) => {
+        queryClient.setQueryData(['posts', newPost.id], newPost)
+        console.log("pppppp");
+        queryClient.invalidateQueries('posts')
+        /*
+        if (queryClient.getQueryData('posts')) {
+          console.log("33333");
+          
+          queryClient.setQueryData('posts', old => {
+            return old.map(d => {
+              if (d.id === newPost.id) {
+                return newPost
+              }
+              return d
             })
-          } else {
-            console.log("KKKKKKKK");
-            
-            queryClient.setQueryData('posts', [newPost])
-            queryClient.invalidateQueries('posts')
-          }*/
-        },
-      }
+          })
+        } else {
+          console.log("KKKKKKKK");
+          
+          queryClient.setQueryData('posts', [newPost])
+          queryClient.invalidateQueries('posts')
+        }*/
+      },
+    }
   )
   /*
   const [state, setState] = React.useReducer((_, action) => action, {
@@ -229,41 +229,47 @@ function App() {
     <div className="App">
       <OverlayProvider>
         <Example />
+        <BodyPost />
       </OverlayProvider>
+      
+    </div>
+  );
+
+  function BodyPost() {
+    return (
       <QueryClientProvider client={queryClient}>
         <p>
           As
         </p>
 
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: '1fr 1fr',
-          gridGap: '1rem'
-        }}>
+   
           <Todos />
-        </div>
+        
         <BearCounter></BearCounter>
         <Controls></Controls>
-        <div>xxxx</div>
+        <div>Bears</div>
         <ReactQueryDevtools initialIsOpen />
       </QueryClientProvider>
-    </div>
-  );
+    )
+  }
 }
 
 
 //const Component1 = ({ prop1, prop2 }): JSX.Element => { }
 const Todos: React.FC<{}> = () => {
+  let state = useOverlayTriggerState({});
+
   const { isLoading, isError, data, error } = usePosts();
   //const [createPost, createPostInfo] = useCreatePost();
-  const deletePost  = useDeletePost();
- 
- const postId ="a8nX64wMH";
+  const deletePost = useDeletePost();
+
+  
+  const postId = "a8nX64wMH";
   const onDelete = async () => {
-    console.log     ('------------------------------/admin');
-   
-   // await savePost(postId)
-    
+    console.log('------------------------------/admin');
+
+    // await savePost(postId)
+
   }
 
   /*
@@ -299,21 +305,63 @@ const Todos: React.FC<{}> = () => {
 
   // We can assume by this point that `isSuccess === true`
   return (
-    data.map((post) => (
+    <div  style={{
+      display: 'grid',
+      gridTemplateColumns: '1fr 1fr',
+      gridGap: '1rem'
+    }}>
+    {
+    data.map((post: { id: React.Key | null | undefined; userId : number ; title: string | null | undefined; body: string | null | undefined; }) => (
       <div style={stylePost} to={`./${post.id}`} key={post.id} >
         <h3>-{post.title}</h3>
         <p>{post.body}</p>
-        <button onClick={ ()=> deletePost.mutate({ id: post.id, title: 'ffff' })  }>ooo</button>
+        <Button onPress={
+          ()=>{
+            console.log(post.id+ "... "+post.title+"... "+post.body);
+            state.open();
+          }
+          }>Open Dialog</Button>
+      
       </div>
-    )))
-
+    ))
+    }
+    {state.isOpen &&
+        (
+          <OverlayContainer>
+            <ModalDialog
+              title="Enter your name"
+              isOpen
+              onClose={state.close}
+              isDismissable
+            >
+              <form style={{ display: 'flex', flexDirection: 'column' }}>
+                <label htmlFor="first-name">Titulo:</label>
+                <input id="first-name" />
+                <label htmlFor="last-name">Body:</label>
+                <input id="last-name" />
+                <Button
+                  onPress={
+                    state.close
+                  
+                  }
+              
+                  style={{ marginTop: 10 }}
+                >
+                  Submit
+                </Button>
+              </form>
+            </ModalDialog>
+          </OverlayContainer>
+        )}
+    </div>
+  )
 
 
 }
 
 
 
-
+/*
 function Posts() {
   const postsQuery = usePosts()
   const [createPost, createPostInfo] = useCreatePost()
@@ -329,18 +377,18 @@ function Posts() {
           ) : (
             <>
               <h3>Posts</h3>
-              {/*
-              <ul>
+              {
+              // <ul>
 
-                {postsQuery.data.map((post) => (
-                  <li key={post.id}>
-                    <Link to={`./${post.id}`}>{post.title}</Link>
-                  </li>
-                ))}
+              //   {postsQuery.data.map((post) => (
+              //     <li key={post.id}>
+              //       <Link to={`./${post.id}`}>{post.title}</Link>
+              //     </li>
+              //   ))}
 
                 
-              </ul>
-                */}
+              // </ul>
+                }
               <br />
             </>
           )}
@@ -350,29 +398,29 @@ function Posts() {
       <div>
         <h3>Create New Post</h3>
         <div>
-          {/*
-          // 
-          <PostForm
-            onSubmit={createPost}
-            clearOnSubmit
-            submitText={
-              createPostInfo.isLoading
-                ? 'Saving...'
-                : createPostInfo.isError
-                ? 'Error!'
-                : createPostInfo.isSuccess
-                ? 'Saved!'
-                : 'Create Post'
-            }
-          />
-          /
-          */}
+          {
+          
+          // <PostForm
+          //   onSubmit={createPost}
+          //   clearOnSubmit
+          //   submitText={
+          //     createPostInfo.isLoading
+          //       ? 'Saving...'
+          //       : createPostInfo.isError
+          //       ? 'Error!'
+          //       : createPostInfo.isSuccess
+          //       ? 'Saved!'
+          //       : 'Create Post'
+          //   }
+          // />
+          
+          }
         </div>
       </div>
     </section>
   )
 }
-
+*/
 
 
 function wait(ms: number | undefined, value: any) {
