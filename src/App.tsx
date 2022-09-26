@@ -1,5 +1,6 @@
 import { stylePost } from './styles'
 import create from 'zustand'
+import { devtools } from 'zustand/middleware'
 import reactLogo from './assets/react.svg'
 import './App.css'
 import {
@@ -24,15 +25,29 @@ import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 
 // zustand------------------
 
-const useBearStore = create((set) => ({
+type Todo = {
+  id: number;
+  title: string;
+  body: string;
+}
+interface BearState {
+  bears: number
+  todoSelected: {id: number, title: string, body: string}
+  increasePopulation: () => void
+  setTodoSelected: (todo : Todo) => void
+}
+
+const useBearStore = create<BearState>(set => ({
   bears: 0,
+  todoSelected: {id: 0, title: '', body: ''},
   increasePopulation: () => set((state) => ({ bears: state.bears + 1 })),
-  removeAllBears: () => set({ bears: 0 }),
+  setTodoSelected: (todo:Todo) => set((state) => ({ todoSelected: todo })),
 }))
 
 
 function BearCounter() {
   const bears = useBearStore((state) => state.bears)
+  //console.log(bears);
   return <h1>{bears} bears around here ...</h1>
 }
 
@@ -40,6 +55,8 @@ function Controls() {
   const increasePopulation = useBearStore((state) => state.increasePopulation)
   return <button onClick={increasePopulation}>one up</button>
 }
+
+
 //fim  zustand------------------
 
 
@@ -48,15 +65,15 @@ var todosServerAxios = axios.create({ baseURL: "http://localhost:5110" });
 
 
 function usePosts() {
-  return useQuery(['posts'],  () => todosServerAxios.get('/posts/').then((res) => res.data).then(/*teste latency*/wait(0)), )
+  return useQuery(['posts'],  () => todosServerAxios.get('/posts/').then((res) => res.data).then(/*teste latency*/wait(1110)), )
 }
 
 
 
-function useDeletePost() {
+function useChangePost() {
 
   return useMutation(
-    (newPost) => todosServerAxios
+    (newPost:Todo) => todosServerAxios
       .patch(`/posts/${newPost.id}`, newPost)
       .then((res) => res.data),
     {
@@ -125,11 +142,9 @@ function Button(props: AriaButtonProps<React.ElementType<any>>) {
 
 // Create a client
 const queryClient = new QueryClient(
-  //
   //     {
   //       defaultOptions: { queries: { retry: 2 } },
   //     }
-  //
 )
 function App() {
   return (
@@ -138,16 +153,13 @@ function App() {
         <ExampleTituloModal />
         <BodyPost />
       </OverlayProvider>
-      
     </div>
   );
 
   function BodyPost() {
     return (
       <QueryClientProvider client={queryClient}>
-        <p>
-          As
-        </p>
+        <p> As </p>
         <Todos />
         <BearCounter></BearCounter>
         <Controls></Controls>
@@ -162,10 +174,13 @@ function App() {
 //const Component1 = ({ prop1, prop2 }): JSX.Element => { }
 const Todos: React.FC<{}> = () => {
   let state = useOverlayTriggerState({});
+  const todoSelected = useBearStore((state) => state.todoSelected);
+  const setTodoSelected = useBearStore((state) => state.setTodoSelected); 
+
 
   const { isLoading, isError, data, error } = usePosts();
   //const [createPost, createPostInfo] = useCreatePost();
-  const deletePost = useDeletePost();
+  const changePost = useChangePost();
 
 
   const postId = "a8nX64wMH";
@@ -193,7 +208,6 @@ const Todos: React.FC<{}> = () => {
   //   )
   // )
   //const { data: dd } = usePost(5);
-  console.log(data);
 
   if (isLoading) {
     return <span>
@@ -213,13 +227,15 @@ const Todos: React.FC<{}> = () => {
       gridGap: '1rem'
     }}>
     {
-    data.map((post: { id: React.Key | null | undefined; userId : number ; title: string | null | undefined; body: string | null | undefined; }) => (
+    data.map((post: { id:  number ; title: string; body: string }) => (
       <div style={stylePost} to={`./${post.id}`} key={post.id} >
         <h3>-{post.title}</h3>
         <p>{post.body}</p>
         <Button onPress={
           ()=>{
             console.log(post.id+ "... "+post.title+"... "+post.body);
+            const umP= {id:post.id,title:post.title, body:post.body};
+            setTodoSelected(umP);
             state.open();
           }
           }>Open Dialog</Button>
@@ -238,12 +254,26 @@ const Todos: React.FC<{}> = () => {
             >
               <form style={{ display: 'flex', flexDirection: 'column' }}>
                 <label htmlFor="first-name">Titulo:</label>
-                <input id="first-name" />
-                <label htmlFor="last-name">Body:</label>
-                <input id="last-name" />
+                <input id="first-name" defaultValue={todoSelected.title}
+                onBlur={(e)=>{
+                  todoSelected.title=e.target.value;
+                }}
+                />
+                <label htmlFor="last-name"  >Body:</label>
+                <textarea id="last-name" defaultValue={todoSelected.body}
+                 onBlur={(e)=>{
+                  todoSelected.body=e.target.value;
+                }}
+                />
                 <Button
                 style={{ marginTop: 100 }} 
-                  onPress={state.close}              
+                  onPress={
+                    ()=>{
+                     // console.log(todoSelected);
+                      changePost.mutate(todoSelected);  
+                      state.close();
+                    }
+                  }              
                 >
                   Submit
                 </Button>
