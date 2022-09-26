@@ -21,6 +21,7 @@ import {
   QueryClientProvider,
 } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
+/*
 
 const queryCache = new QueryCache({
   onError: error => {
@@ -30,38 +31,6 @@ const queryCache = new QueryCache({
     console.log(data)
   }
 })
-
-// zustand------------------
-
-const useBearStore = create((set) => ({
-  bears: 0,
-  increasePopulation: () => set((state) => ({ bears: state.bears + 1 })),
-  removeAllBears: () => set({ bears: 0 }),
-}))
-
-
-function BearCounter() {
-  const bears = useBearStore((state) => state.bears)
-  return <h1>{bears} bears around here ...</h1>
-}
-
-function Controls() {
-  const increasePopulation = useBearStore((state) => state.increasePopulation)
-  return <button onClick={increasePopulation}>one up</button>
-}
-//fim  zustand------------------
-
-
-//npx json-server  -w data/db.json -p 5110
-var todosServerAxios = axios.create({ baseURL: "http://localhost:5110" });
-
-
-function usePosts() {
-  return useQuery(['posts'],
-    () => todosServerAxios.get('/posts/').then((res) => res.data),
-  )
-}
-
 function usePost(postId: number) {
   return useQuery(['posts', postId],
     () => todosServerAxios.get('/posts/' + postId).then((res) => res.data),
@@ -72,7 +41,7 @@ function usePost(postId: number) {
 
 
 }
-/*
+
 function useCreatePost() {
   const queryClient = useQueryClient();
 
@@ -99,6 +68,37 @@ function useCreatePost() {
   )
 }
 */
+// zustand------------------
+
+const useBearStore = create((set) => ({
+  bears: 0,
+  increasePopulation: () => set((state) => ({ bears: state.bears + 1 })),
+  removeAllBears: () => set({ bears: 0 }),
+}))
+
+
+function BearCounter() {
+  const bears = useBearStore((state) => state.bears)
+  return <h1>{bears} bears around here ...</h1>
+}
+
+function Controls() {
+  const increasePopulation = useBearStore((state) => state.increasePopulation)
+  return <button onClick={increasePopulation}>one up</button>
+}
+//fim  zustand------------------
+
+
+//npx json-server  -w data/db.json -p 5110
+var todosServerAxios = axios.create({ baseURL: "http://localhost:5110" });
+
+
+function usePosts() {
+  return useQuery(['posts'],  () => todosServerAxios.get('/posts/').then((res) => res.data).then(/*teste latency*/wait(0)), )
+}
+
+
+
 function useDeletePost() {
 
 
@@ -114,7 +114,8 @@ function useDeletePost() {
       onSuccess: (newPost) => {
         queryClient.setQueryData(['posts', newPost.id], newPost)
         console.log("pppppp");
-        queryClient.invalidateQueries('posts')
+        queryClient.invalidateQueries('posts');
+
         /*
         if (queryClient.getQueryData('posts')) {
           console.log("33333");
@@ -158,7 +159,7 @@ console.log("::::::::::::::::");
 */
 }
 
-function Example() {
+function ExampleTituloModal() {
   let state = useOverlayTriggerState({});
 
   return (
@@ -217,18 +218,10 @@ const queryClient = new QueryClient(
   //
 )
 function App() {
-  //const [count, setCount] = useState(0)
-  // <button onClick={() => setCount((count) => count + 1)}>
-  //    count is {count}
-  //  </button>
-  //  <p>
-  //    Edit <code>src/App.tsx</code> and save to test HMR
-  //  </p>
-  //
   return (
     <div className="App">
       <OverlayProvider>
-        <Example />
+        <ExampleTituloModal />
         <BodyPost />
       </OverlayProvider>
       
@@ -241,10 +234,7 @@ function App() {
         <p>
           As
         </p>
-
-   
-          <Todos />
-        
+        <Todos />
         <BearCounter></BearCounter>
         <Controls></Controls>
         <div>Bears</div>
@@ -263,13 +253,11 @@ const Todos: React.FC<{}> = () => {
   //const [createPost, createPostInfo] = useCreatePost();
   const deletePost = useDeletePost();
 
-  
+
   const postId = "a8nX64wMH";
   const onDelete = async () => {
     console.log('------------------------------/admin');
-
     // await savePost(postId)
-
   }
 
   /*
@@ -329,7 +317,7 @@ const Todos: React.FC<{}> = () => {
         (
           <OverlayContainer>
             <ModalDialog
-              title="Enter your name"
+              title="Change your post:"
               isOpen
               onClose={state.close}
               isDismissable
@@ -422,8 +410,13 @@ function Posts() {
 }
 */
 
+function wait(ms) {
+  return function(v) {
+    return new Promise(resolve => setTimeout(() => resolve(v), ms));
+  };
+}
 
-function wait(ms: number | undefined, value: any) {
+function wait2(ms: number | undefined, value: any): Promise<unknown> {
   return new Promise(resolve => setTimeout(resolve, ms, value));
 }
 
