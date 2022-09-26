@@ -21,53 +21,7 @@ import {
   QueryClientProvider,
 } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
-/*
 
-const queryCache = new QueryCache({
-  onError: error => {
-    console.log(error)
-  },
-  onSuccess: data => {
-    console.log(data)
-  }
-})
-function usePost(postId: number) {
-  return useQuery(['posts', postId],
-    () => todosServerAxios.get('/posts/' + postId).then((res) => res.data),
-    {
-      initialData: () => console.log(queryCache.get('posts'))
-    }
-  )
-
-
-}
-
-function useCreatePost() {
-  const queryClient = useQueryClient();
-
-  return useMutation(
-    (values) => axios.post('/posts/', values).then((res) => res.data),
-    {
-      onMutate: (newPost) => {
-        const oldPosts = queryCache.findAll('posts')
-
-        if (queryCache.findAll('posts')) {
-          queryCache.findAll('posts', (old) => [...old, newPost])
-        }
-
-        return () => queryClient.setQueryData('posts', oldPosts)
-      },
-      onError: (error, _newPost, rollback) => {
-        console.error(error);
-        if (rollback) rollback()
-      },
-      onSettled: () => {
-        queryClient.invalidateQueries('posts');
-      }
-    }
-  )
-}
-*/
 // zustand------------------
 
 const useBearStore = create((set) => ({
@@ -101,7 +55,6 @@ function usePosts() {
 
 function useDeletePost() {
 
-
   return useMutation(
     (newPost) => todosServerAxios
       .patch(`/posts/${newPost.id}`, newPost)
@@ -115,48 +68,9 @@ function useDeletePost() {
         queryClient.setQueryData(['posts', newPost.id], newPost)
         console.log("pppppp");
         queryClient.invalidateQueries('posts');
-
-        /*
-        if (queryClient.getQueryData('posts')) {
-          console.log("33333");
-          
-          queryClient.setQueryData('posts', old => {
-            return old.map(d => {
-              if (d.id === newPost.id) {
-                return newPost
-              }
-              return d
-            })
-          })
-        } else {
-          console.log("KKKKKKKK");
-          
-          queryClient.setQueryData('posts', [newPost])
-          queryClient.invalidateQueries('posts')
-        }*/
       },
     }
   )
-  /*
-  const [state, setState] = React.useReducer((_, action) => action, {
-    isIdle: true,
-  })
-console.log("::::::::::::::::");
-
-  const mutate = React.useCallback(async (postId) => {
-    console.log("ÇÇÇÇÇÇÇÇÇÇÇ");
-    
-    setState({ isLoading: true })
-    try {
-      await todosServerAxios.delete(`/posts/${postId}`).then((res) => res.data)
-      setState({ isSuccess: true })
-    } catch (error) {
-      setState({ isError: true, error })
-    }
-  }, [])
-
-  return [mutate, state]
-*/
 }
 
 function ExampleTituloModal() {
@@ -328,12 +242,8 @@ const Todos: React.FC<{}> = () => {
                 <label htmlFor="last-name">Body:</label>
                 <input id="last-name" />
                 <Button
-                  onPress={
-                    state.close
-                  
-                  }
-              
-                  style={{ marginTop: 10 }}
+                style={{ marginTop: 100 }} 
+                  onPress={state.close}              
                 >
                   Submit
                 </Button>
@@ -347,68 +257,6 @@ const Todos: React.FC<{}> = () => {
 
 }
 
-
-
-/*
-function Posts() {
-  const postsQuery = usePosts()
-  const [createPost, createPostInfo] = useCreatePost()
-
-  return (
-    <section>
-      <div>
-        <div>
-          {postsQuery.isLoading ? (
-            <span>
-
-            </span>
-          ) : (
-            <>
-              <h3>Posts</h3>
-              {
-              // <ul>
-
-              //   {postsQuery.data.map((post) => (
-              //     <li key={post.id}>
-              //       <Link to={`./${post.id}`}>{post.title}</Link>
-              //     </li>
-              //   ))}
-
-                
-              // </ul>
-                }
-              <br />
-            </>
-          )}
-        </div>
-      </div>
-      <hr />
-      <div>
-        <h3>Create New Post</h3>
-        <div>
-          {
-          
-          // <PostForm
-          //   onSubmit={createPost}
-          //   clearOnSubmit
-          //   submitText={
-          //     createPostInfo.isLoading
-          //       ? 'Saving...'
-          //       : createPostInfo.isError
-          //       ? 'Error!'
-          //       : createPostInfo.isSuccess
-          //       ? 'Saved!'
-          //       : 'Create Post'
-          //   }
-          // />
-          
-          }
-        </div>
-      </div>
-    </section>
-  )
-}
-*/
 
 function wait(ms) {
   return function(v) {
